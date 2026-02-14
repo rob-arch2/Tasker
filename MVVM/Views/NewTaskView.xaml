@@ -5,42 +5,199 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Add New Task">
 
-    <!--<Grid RowDefinitions=".2*, .7*, .1*">
-        <Entry
-            Placeholder="Enter New Task"
-            Style="{StaticResource Task}"
-            Text="{Binding Task}" />
-        <CollectionView
-            Grid.Row="1"
-            Margin="15"
-            ItemsSource="{Binding Categories}">
-            <CollectionView.ItemsLayout>
-                <GridItemsLayout
-                    HorizontalItemSpacing="5"
-                    Orientation="Vertical"
-                    Span="2"
-                    VerticalItemSpacing="5" />
-            </CollectionView.ItemsLayout>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame>
-                        <RadioButton
-                            Content="{Binding CategoryName}"
-                            GroupName="Category"
-                            IsChecked="{Binding IsSelected}" />
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-        <HorizontalStackLayout
-            Grid.Row="2"
-            Margin="10"
-            HorizontalOptions="CenterAndExpand"
-            Spacing="15"
-            VerticalOptions="Center">
-            <Button CornerRadius="15" Text="Add Task" Clicked="AddTaskClicked"/>
-            <Button CornerRadius="15" Text="Add Category" Clicked="AddCategoryClicked"/>
-        </HorizontalStackLayout>
-    </Grid>-->
+    <ScrollView>
+        <VerticalStackLayout Padding="15" Spacing="20">
 
+            <!--  Task Name Section  -->
+            <Frame
+                Padding="15"
+                BackgroundColor="White"
+                CornerRadius="10"
+                HasShadow="False">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="Task Name"
+                        TextColor="#212B4F" />
+                    <Entry
+                        x:Name="taskNameEntry"
+                        Placeholder="Enter task name..."
+                        Text="{Binding Task}"
+                        TextColor="#212B4F" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!--  Category Selection  -->
+            <Frame
+                Padding="15"
+                BackgroundColor="White"
+                CornerRadius="10"
+                HasShadow="False">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="Category"
+                        TextColor="#212B4F" />
+                    <Picker
+                        x:Name="categoryPicker"
+                        Title="Select a category"
+                        ItemDisplayBinding="{Binding CategoryName}"
+                        ItemsSource="{Binding Categories}"
+                        SelectedItem="{Binding SelectedCategory}"
+                        TextColor="#212B4F" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!--  Deadline Section  -->
+            <Frame
+                Padding="15"
+                BackgroundColor="White"
+                CornerRadius="10"
+                HasShadow="False">
+                <VerticalStackLayout Spacing="10">
+                    <HorizontalStackLayout Spacing="10">
+                        <CheckBox IsChecked="{Binding HasDeadline}" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="Set Deadline"
+                            TextColor="#212B4F"
+                            VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <DatePicker
+                        x:Name="deadlinePicker"
+                        Date="{Binding Deadline}"
+                        IsEnabled="{Binding HasDeadline}"
+                        MinimumDate="{x:Static sys:DateTime.Now}"
+                        TextColor="#212B4F">
+                        <DatePicker.Triggers>
+                            <DataTrigger
+                                Binding="{Binding HasDeadline}"
+                                TargetType="DatePicker"
+                                Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                            </DataTrigger>
+                        </DatePicker.Triggers>
+                    </DatePicker>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!--  Initial Subtasks Section  -->
+            <Frame
+                Padding="15"
+                BackgroundColor="White"
+                CornerRadius="10"
+                HasShadow="False">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="Initial Subtasks (Optional)"
+                        TextColor="#212B4F" />
+
+                    <!--  Add Subtask Input  -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Entry
+                            Grid.Column="0"
+                            Placeholder="Enter subtask..."
+                            ReturnCommand="{Binding AddSubtaskCommand}"
+                            ReturnType="Done"
+                            Text="{Binding NewSubtaskText}"
+                            TextColor="#212B4F" />
+                        <Button
+                            Grid.Column="0"
+                            BackgroundColor="#2b0b98"
+                            Clicked="OnAddSubtaskClicked"
+                            CornerRadius="8"
+                            FontAttributes="Bold"
+                            Text="+"
+                            TextColor="White"
+                            WidthRequest="50" />
+                    </Grid>
+
+                    <!--  Subtasks List  -->
+                    <CollectionView ItemsSource="{Binding Subtasks}" SelectionMode="None">
+                        <CollectionView.EmptyView>
+                            <Label
+                                FontSize="14"
+                                HorizontalOptions="Center"
+                                Padding="20"
+                                Text="No subtasks added yet"
+                                TextColor="#999" />
+                        </CollectionView.EmptyView>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <SwipeView>
+                                    <SwipeView.RightItems>
+                                        <SwipeItems>
+                                            <SwipeItem
+                                                BackgroundColor="#ff4444"
+                                                Clicked="OnDeleteSubtaskClicked"
+                                                CommandParameter="{Binding .}"
+                                                Text="Delete" />
+                                        </SwipeItems>
+                                    </SwipeView.RightItems>
+
+                                    <Grid
+                                        Padding="10,8"
+                                        ColumnDefinitions="Auto,*"
+                                        ColumnSpacing="10">
+                                        <Ellipse
+                                            Grid.Column="0"
+                                            Fill="#2b0b98"
+                                            HeightRequest="6"
+                                            WidthRequest="6" />
+                                        <Label
+                                            Grid.Column="1"
+                                            FontSize="14"
+                                            Text="{Binding TaskName}"
+                                            TextColor="#212B4F"
+                                            VerticalOptions="Center" />
+                                    </Grid>
+                                </SwipeView>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <Label
+                        FontSize="12"
+                        Text="💡 Swipe left on a subtask to delete it"
+                        TextColor="#999" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!--  Create Button  -->
+            <Button
+                Clicked="OnCreateTaskClicked"
+                CornerRadius="10"
+                FontAttributes="Bold"
+                FontSize="16"
+                HeightRequest="50"
+                Text="Create Task">
+                <Button.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Offset="0.0" Color="#512BD4" />
+                        <GradientStop Offset="1.0" Color="#2b0b98" />
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+
+            <Button
+                Clicked="OnCancelClicked"
+                BackgroundColor="Transparent"
+                BorderColor="White"
+                BorderWidth="2"
+                CornerRadius="10"
+                FontAttributes="Bold"
+                FontSize="16"
+                HeightRequest="50"
+                Text="Cancel"
+                TextColor="White" />
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

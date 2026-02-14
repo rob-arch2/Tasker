@@ -5,57 +5,85 @@ namespace Tasker.MVVM.Views;
 
 public partial class NewTaskView : ContentPage
 {
-	public NewTaskView()
-	{
-		InitializeComponent();
-	}
+    private NewTaskViewModel viewModel;
 
-	private async void AddTaskClicked(object sender, EventArgs e)
-	{
-		  var vm = BindingContext as NewTaskViewModel;
+    public NewTaskView()
+    {
+        InitializeComponent();
+    }
 
-		  var selectedCategory =
-			   vm.Categories.Where(x => x.IsSelected == true).FirstOrDefault();
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        viewModel = BindingContext as NewTaskViewModel;
+    }
 
-		  if(selectedCategory!=null)
-		  {
-			   var task = new MyTask
-			   {
-					TaskName = vm.Task,
-					CategoryId = selectedCategory.Id
-			   };
-			   vm.Tasks.Add(task);
-			   await Navigation.PopAsync();
-		  }
-		  else
-		  {
-			   await DisplayAlert("Invalid Selection", "You must select a category", "Ok");
-		  }
-	}
+    private void OnAddSubtaskClicked(object sender, EventArgs e)
+    {
+        viewModel?.AddSubtask();
+    }
 
-	 private async void AddCategoryClicked(object sender, EventArgs e)
-	 {
-		  var vm = BindingContext as NewTaskViewModel;
+    private void OnDeleteSubtaskClicked(object sender, EventArgs e)
+    {
+        if (sender is SwipeItem swipeItem && swipeItem.CommandParameter is Subtask subtask)
+        {
+            viewModel?.RemoveSubtask(subtask);
+        }
+    }
 
-		  string category =
-			   await DisplayPromptAsync("New Categry",
-			   "Write the new category name",
-			   maxLength: 15,
-			   keyboard: Keyboard.Text);
+    private async void OnCreateTaskClicked(object sender, EventArgs e)
+    {
+        // Validate input
+        if (string.IsNullOrWhiteSpace(viewModel?.Task))
+        {
+            await DisplayAlert("Error", "Please enter a task name", "OK");
+            return;
+        }
 
-		  var r = new Random();
+        if (viewModel?.SelectedCategory == null)
+        {
+            await DisplayAlert("Error", "Please select a category", "OK");
+            return;
+        }
 
-		  if(!string.IsNullOrEmpty(category))
-		  {
-			   vm.Categories.Add(new Category
-			   {
-					Id = vm.Categories.Max(x => x.Id) + 1,
-					Color = Color.FromRgb(
-						 r.Next(0, 255),
-						 r.Next(0, 255),
-						 r.Next(0, 255)).ToHex(),
-					CategoryName = category
-			   });
-		  }
-	 }
+        // Create the task
+        viewModel.CreateTask();
+
+        // Show success message
+        await DisplayAlert("Success", "Task created successfully!", "OK");
+
+        // Navigate back
+        await Navigation.PopAsync();
+    }
+
+    private async void OnCancelClicked(object sender, EventArgs e)
+    {
+        // Ask for confirmation if there's any data entered
+        bool hasData = !string.IsNullOrWhiteSpace(viewModel?.Task) ||
+                       viewModel?.Subtasks?.Count > 0;
+
+        if (hasData)
+        {
+            bool shouldCancel = await DisplayAlert(
+                "Confirm",
+                "Discard this task?",
+                "Yes",
+                "No");
+
+            if (!shouldCancel)
+                return;
+        }
+
+        await Navigation.PopAsync();
+    }
 }
+
+
+
+
+
+
+
+
+
+
