@@ -4,9 +4,19 @@
 
     <Color x:Key="DarkBlue">#212B4F</Color>
     <Color x:Key="LightBlue">#8A8BA6</Color>
+    <Color x:Key="Black">#000000</Color>
+    <Color x:Key="White">#ffffff</Color>
+
+    <Style Class="White" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+    </Style>
 
     <Style Class="DarkBlue" TargetType="Label">
         <Setter Property="TextColor" Value="{StaticResource DarkBlue}" />
+    </Style>
+
+    <Style Class="Black" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource Black}" />
     </Style>
 
     <Style Class="LightBlue" TargetType="Label">
