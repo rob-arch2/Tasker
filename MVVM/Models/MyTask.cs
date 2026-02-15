@@ -39,11 +39,4 @@ namespace Tasker.MVVM.Models
             Subtasks = new ObservableCollection<Subtask>();
         }
     }
-
-    [AddINotifyPropertyChangedInterface]
-    public class Subtask
-    {
-        public string TaskName { get; set; }
-        public bool Completed { get; set; }
-    }
 }
