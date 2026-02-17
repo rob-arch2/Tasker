@@ -50,7 +50,7 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <!--  Deadline Section  -->
+            <!--  Deadline Section with Date AND Time  -->
             <Frame
                 Padding="15"
                 BackgroundColor="White"
@@ -67,12 +67,18 @@
                             VerticalOptions="Center" />
                     </HorizontalStackLayout>
 
+                    <!--  Date Picker  -->
+                    <Label
+                        Text="Date"
+                        FontSize="14"
+                        TextColor="#666"
+                        IsVisible="{Binding HasDeadline}" />
                     <DatePicker
                         x:Name="deadlinePicker"
-                        Date="{Binding Deadline}"
+                        Date="{Binding DeadlineDate}"
                         IsEnabled="{Binding HasDeadline}"
-                        MinimumDate="{x:Static sys:DateTime.Now}"
-                        TextColor="#212B4F">
+                        TextColor="#212B4F"
+                        Format="D">
                         <DatePicker.Triggers>
                             <DataTrigger
                                 Binding="{Binding HasDeadline}"
@@ -82,6 +88,29 @@
                             </DataTrigger>
                         </DatePicker.Triggers>
                     </DatePicker>
+
+                    <!--  Time Picker  -->
+                    <Label
+                        Text="Time"
+                        FontSize="14"
+                        TextColor="#666"
+                        IsVisible="{Binding HasDeadline}"
+                        Margin="0,10,0,0" />
+                    <TimePicker
+                        x:Name="timePicker"
+                        Time="{Binding DeadlineTime}"
+                        IsEnabled="{Binding HasDeadline}"
+                        TextColor="#212B4F"
+                        Format="h:mm tt">
+                        <TimePicker.Triggers>
+                            <DataTrigger
+                                Binding="{Binding HasDeadline}"
+                                TargetType="TimePicker"
+                                Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                            </DataTrigger>
+                        </TimePicker.Triggers>
+                    </TimePicker>
                 </VerticalStackLayout>
             </Frame>
 
@@ -108,7 +137,7 @@
                             Text="{Binding NewSubtaskText}"
                             TextColor="#212B4F" />
                         <Button
-                            Grid.Column="0"
+                            Grid.Column="1"
                             BackgroundColor="#2b0b98"
                             Clicked="OnAddSubtaskClicked"
                             CornerRadius="8"

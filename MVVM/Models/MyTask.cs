@@ -16,17 +16,19 @@ namespace Tasker.MVVM.Models
         public int CategoryId { get; set; }
         public string TaskColor { get; set; }
 
-        // NEW: Deadline support
+        // Deadline support
         public DateTime? Deadline { get; set; }
         public bool HasDeadline => Deadline.HasValue;
+
+        // Updated to show time as well
         public string DeadlineText => Deadline.HasValue
-            ? $"Due: {Deadline.Value:MMM dd, yyyy}"
+            ? $"Due: {Deadline.Value:MMM dd, yyyy h:mm tt}"
             : "No deadline";
 
-        // NEW: Subtasks support
+        // Subtasks support
         public ObservableCollection<Subtask> Subtasks { get; set; }
 
-        // NEW: Progress calculation
+        // Progress calculation
         public int TotalSubtasks => Subtasks?.Count ?? 0;
         public int CompletedSubtasks => Subtasks?.Count(s => s.Completed) ?? 0;
         public float SubtaskProgress => TotalSubtasks > 0
@@ -38,5 +40,12 @@ namespace Tasker.MVVM.Models
         {
             Subtasks = new ObservableCollection<Subtask>();
         }
+    }
+
+    [AddINotifyPropertyChangedInterface]
+    public class Subtask
+    {
+        public string TaskName { get; set; }
+        public bool Completed { get; set; }
     }
 }

@@ -49,8 +49,15 @@ public partial class NewTaskView : ContentPage
         // Create the task
         viewModel.CreateTask();
 
-        // Show success message
-        await DisplayAlert("Success", "Task created successfully!", "OK");
+        // Show success message with deadline info
+        string message = "Task created successfully!";
+        if (viewModel.HasDeadline)
+        {
+            var deadline = viewModel.DeadlineDate.Date + viewModel.DeadlineTime;
+            message += $"\nDeadline: {deadline:MMM dd, yyyy h:mm tt}";
+        }
+
+        await DisplayAlert("Success", message, "OK");
 
         // Navigate back
         await Navigation.PopAsync();
@@ -77,13 +84,3 @@ public partial class NewTaskView : ContentPage
         await Navigation.PopAsync();
     }
 }
-
-
-
-
-
-
-
-
-
-

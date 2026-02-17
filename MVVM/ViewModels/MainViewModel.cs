@@ -159,20 +159,28 @@ namespace Tasker.MVVM.ViewModels
                 // Update category statistics
                 foreach (var c in Categories)
                 {
-                    var tasks = from t in Tasks where t.CategoryId == c.Id select t;
+                    var tasks = (from t in Tasks where t.CategoryId == c.Id select t).ToList();
                     var completed = from t in tasks where t.Completed == true select t;
                     var notCompleted = from t in tasks where t.Completed == false select t;
 
                     var completedCount = completed.Count();
-                    var tasksCount = tasks.Count();
+                    var tasksCount = tasks.Count;
 
                     // Update properties
                     c.PendingTasks = notCompleted.Count();
                     c.Percentage = tasksCount > 0 ? (float)completedCount / (float)tasksCount : 0f;
 
+                    // POPULATE CategoryTasks for the UI binding
+                    c.CategoryTasks.Clear();
+                    foreach (var task in tasks)
+                    {
+                        c.CategoryTasks.Add(task);
+                    }
+
                     // FORCE PropertyChanged notification
                     c.OnPropertyChanged(nameof(Category.PendingTasks));
                     c.OnPropertyChanged(nameof(Category.Percentage));
+                    c.OnPropertyChanged(nameof(Category.TotalTasks));
                 }
 
                 // Update task colors
@@ -182,13 +190,6 @@ namespace Tasker.MVVM.ViewModels
                     if (category != null)
                     {
                         t.TaskColor = category.Color;
-                    }
-
-                    // Update subtask progress if task has subtasks
-                    if (t.HasSubtasks)
-                    {
-                        t.OnPropertyChanged(nameof(MyTask.SubtaskProgress));
-                        t.OnPropertyChanged(nameof(MyTask.CompletedSubtasks));
                     }
                 }
             }
