@@ -15,6 +15,7 @@ namespace Tasker.MVVM.Models
         private float _percentage;
         private bool _isSelected;
         private bool _isExpanded;
+        private bool _isVisible = true;
         private DateTime _deadline;
 
         public int Id
@@ -71,6 +72,12 @@ namespace Tasker.MVVM.Models
         {
             get => _isExpanded;
             set { _isExpanded = value; OnPropertyChanged(); }
+        }
+
+        public bool IsVisible
+        {
+            get => _isVisible;
+            set { _isVisible = value; OnPropertyChanged(); }
         }
 
         public DateTime Deadline

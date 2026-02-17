@@ -12,7 +12,7 @@
         <converters:DateTimeConverter x:Key="DateTimeConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="5">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="5">
 
         <!--  HEADER  -->
         <Frame
@@ -72,18 +72,79 @@
             </Frame>
         </Grid>
 
+        <!--  FILTER ROW  -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,5">
+            <HorizontalStackLayout Grid.Column="0" Spacing="5">
+                <Button
+                    Text="All"
+                    FontSize="12"
+                    FontAttributes="Bold"
+                    TextColor="White"
+                    BackgroundColor="Black"
+                    CornerRadius="15"
+                    Padding="12,5"
+                    CommandParameter="All"
+                    Clicked="OnFilterClicked" />
+                <Button
+                    Text="Pending"
+                    FontSize="12"
+                    FontAttributes="Bold"
+                    TextColor="#555555"
+                    BackgroundColor="White"
+                    BorderColor="#E0E0E0"
+                    BorderWidth="1"
+                    CornerRadius="15"
+                    Padding="12,5"
+                    CommandParameter="Pending"
+                    Clicked="OnFilterClicked" />
+                <Button
+                    Text="Done"
+                    FontSize="12"
+                    FontAttributes="Bold"
+                    TextColor="#555555"
+                    BackgroundColor="White"
+                    BorderColor="#E0E0E0"
+                    BorderWidth="1"
+                    CornerRadius="15"
+                    Padding="12,5"
+                    CommandParameter="Done"
+                    Clicked="OnFilterClicked" />
+            </HorizontalStackLayout>
+
+            <Button
+                Grid.Column="1"
+                Text="+ Task"
+                FontSize="12"
+                FontAttributes="Bold"
+                TextColor="White"
+                BackgroundColor="Black"
+                CornerRadius="15"
+                Padding="12,5"
+                Clicked="AddTaskClicked" />
+        </Grid>
+
         <!--  SCROLLABLE CATEGORY LIST  -->
-        <ScrollView Grid.Row="2">
+        <ScrollView Grid.Row="3">
             <CollectionView ItemsSource="{Binding Categories}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Frame
                             Padding="0"
                             Margin="0,0,0,5"
-                            BackgroundColor="White"
                             CornerRadius="10"
                             HasShadow="False"
-                            BorderColor="#E0E0E0">
+                            BorderColor="#E0E0E0"
+                            IsVisible="{Binding IsVisible}">
+
+                            <Frame.Triggers>
+                                <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#EEEEEE" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Frame" Binding="{Binding IsSelected}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="White" />
+                                </DataTrigger>
+                            </Frame.Triggers>
+
                             <Grid RowDefinitions="Auto,Auto,Auto">
 
                                 <!--  CATEGORY HEADER (Tappable)  -->
@@ -110,18 +171,28 @@
                                         </Label>
                                     </VerticalStackLayout>
 
-                                    <Label
-                                        Grid.Column="1"
-                                        FontSize="12"
-                                        TextColor="#999999"
-                                        VerticalOptions="Center">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span Text="{Binding TotalTasks}" />
-                                                <Span Text=" Tasks" />
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                                        <Label
+                                            FontSize="12"
+                                            TextColor="#999999"
+                                            VerticalOptions="Center">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding TotalTasks}" />
+                                                    <Span Text=" Tasks" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                        <Label
+                                            Text="✎"
+                                            FontSize="16"
+                                            TextColor="#999999"
+                                            VerticalOptions="Center">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnEditCategoryTapped" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                    </HorizontalStackLayout>
                                 </Grid>
 
                                 <!--  PROGRESS BAR  -->
@@ -146,7 +217,6 @@
                                                         CheckedChanged="checkBox_CheckedChanged"
                                                         Color="{Binding TaskColor, Converter={StaticResource ColorConverter}}"
                                                         VerticalOptions="Center" />
-
                                                     <Label
                                                         Text="{Binding TaskName}"
                                                         FontSize="14"
@@ -161,6 +231,15 @@
                                                                 <Setter Property="TextColor" Value="#999999" />
                                                             </DataTrigger>
                                                         </Label.Triggers>
+                                                    </Label>
+                                                    <Label
+                                                        Text="✎"
+                                                        FontSize="14"
+                                                        TextColor="#CCCCCC"
+                                                        VerticalOptions="Center">
+                                                        <Label.GestureRecognizers>
+                                                            <TapGestureRecognizer Tapped="OnEditTaskTapped" />
+                                                        </Label.GestureRecognizers>
                                                     </Label>
                                                 </HorizontalStackLayout>
                                             </DataTemplate>

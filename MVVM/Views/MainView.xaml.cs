@@ -1,4 +1,4 @@
-using Tasker.MVVM.Models;
+﻿using Tasker.MVVM.Models;
 using Tasker.MVVM.ViewModels;
 
 namespace Tasker.MVVM.Views;
@@ -24,6 +24,7 @@ public partial class MainView : ContentPage
         if (grid?.BindingContext is Category category)
         {
             category.IsExpanded = !category.IsExpanded;
+            mainViewModel.SelectCategory(category);
         }
     }
 
@@ -63,18 +64,18 @@ public partial class MainView : ContentPage
 
         if (!string.IsNullOrWhiteSpace(categoryName))
         {
-            var deadlineDate = await DisplayPromptAsync(
+            var deadlineInput = await DisplayPromptAsync(
                 "Deadline",
-                "Enter deadline (e.g., 'Today 5:30PM' or 'Tomorrow 9:00AM')",
-                placeholder: "Today 5:30PM",
+                "Enter deadline date (e.g. 12/31/2025)",
+                placeholder: "MM/dd/yyyy",
                 keyboard: Keyboard.Text);
 
             DateTime deadline = DateTime.Today.AddHours(23).AddMinutes(59);
 
-            if (!string.IsNullOrWhiteSpace(deadlineDate) &&
-                deadlineDate.Contains("tomorrow", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(deadlineInput))
             {
-                deadline = DateTime.Today.AddDays(1).AddHours(12);
+                if (DateTime.TryParse(deadlineInput, out DateTime parsed))
+                    deadline = parsed;
             }
 
             var random = new Random();
@@ -94,6 +95,134 @@ public partial class MainView : ContentPage
 
             mainViewModel.Categories.Add(newCategory);
             mainViewModel.UpdateData();
+        }
+    }
+
+    // Issue 1 fix: deadline accepts any parseable date string
+    private async void AddTaskClicked(object sender, EventArgs e)
+    {
+        if (!mainViewModel.Categories.Any())
+        {
+            await DisplayAlert("No Categories", "Please add a category first.", "OK");
+            return;
+        }
+
+        string taskName = await DisplayPromptAsync(
+            "New Task",
+            "Enter task name",
+            placeholder: "Task name",
+            maxLength: 100,
+            keyboard: Keyboard.Text);
+
+        if (string.IsNullOrWhiteSpace(taskName)) return;
+
+        var categoryNames = mainViewModel.Categories.Select(c => c.CategoryName).ToArray();
+        string chosen = await DisplayActionSheet("Select Category", "Cancel", null, categoryNames);
+
+        if (string.IsNullOrEmpty(chosen) || chosen == "Cancel") return;
+
+        var target = mainViewModel.Categories.FirstOrDefault(c => c.CategoryName == chosen);
+        if (target == null) return;
+
+        bool setDeadline = await DisplayAlert("Deadline", "Do you want to set a deadline?", "Yes", "No");
+
+        DateTime? deadline = null;
+
+        if (setDeadline)
+        {
+            string deadlineInput = await DisplayPromptAsync(
+                "Set Deadline",
+                "Enter deadline date (e.g. 12/31/2025 5:00 PM)",
+                placeholder: "MM/dd/yyyy h:mm tt",
+                keyboard: Keyboard.Text);
+
+            if (!string.IsNullOrWhiteSpace(deadlineInput))
+            {
+                if (DateTime.TryParse(deadlineInput, out DateTime parsed))
+                    deadline = parsed;
+                else
+                    await DisplayAlert("Invalid Date", "Could not read that date. No deadline set.", "OK");
+            }
+        }
+
+        mainViewModel.Tasks.Add(new MyTask
+        {
+            TaskName = taskName,
+            Completed = false,
+            CategoryId = target.Id,
+            TaskColor = target.Color,
+            Deadline = deadline
+        });
+    }
+
+    // Issue 1 fix: edit task now correctly updates the task name
+    private async void OnEditTaskTapped(object sender, EventArgs e)
+    {
+        if (sender is not Label label) return;
+        if (label.BindingContext is not MyTask task) return;
+
+        string newName = await DisplayPromptAsync(
+            "Edit Task",
+            "Enter new task name",
+            initialValue: task.TaskName,
+            placeholder: "Task name",
+            maxLength: 100,
+            keyboard: Keyboard.Text);
+
+        if (string.IsNullOrWhiteSpace(newName)) return;
+        if (newName == task.TaskName) return;
+
+        task.TaskName = newName;
+
+        // Force the UI to refresh the task list
+        mainViewModel.ApplyFilter();
+    }
+
+    private async void OnEditCategoryTapped(object sender, EventArgs e)
+    {
+        if (sender is not Label label) return;
+        if (label.BindingContext is not Category category) return;
+
+        string newName = await DisplayPromptAsync(
+            "Edit Category",
+            "Enter new category name",
+            initialValue: category.CategoryName,
+            placeholder: "Category name",
+            maxLength: 30,
+            keyboard: Keyboard.Text);
+
+        if (!string.IsNullOrWhiteSpace(newName) && newName != category.CategoryName)
+            category.CategoryName = newName;
+    }
+
+    // Issue 3 fix: filter walks parent HorizontalStackLayout siblings, no x:Name needed
+    private void OnFilterClicked(object sender, EventArgs e)
+    {
+        if (sender is not Button tapped) return;
+
+        string filter = tapped.CommandParameter?.ToString() ?? "All";
+        mainViewModel.SetFilter(filter);
+
+        if (tapped.Parent is HorizontalStackLayout hsl)
+        {
+            foreach (var child in hsl.Children)
+            {
+                if (child is not Button btn) continue;
+
+                bool isActive = btn.CommandParameter?.ToString() == filter;
+
+                btn.BackgroundColor = isActive
+                    ? filter switch
+                    {
+                        "Pending" => Color.FromArgb("#FF6B35"),
+                        "Done" => Color.FromArgb("#2ECC71"),
+                        _ => Colors.Black
+                    }
+                    : Colors.White;
+
+                btn.TextColor = isActive ? Colors.White : Color.FromArgb("#555555");
+                btn.BorderColor = isActive ? Colors.Transparent : Color.FromArgb("#E0E0E0");
+            }
         }
     }
 }

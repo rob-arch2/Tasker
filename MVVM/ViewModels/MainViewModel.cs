@@ -13,6 +13,9 @@ namespace Tasker.MVVM.ViewModels
         public ObservableCollection<Category> Categories { get; set; }
         public ObservableCollection<MyTask> Tasks { get; set; }
 
+        public Category SelectedCategory { get; set; }
+        public string CurrentFilter { get; set; } = "All";
+
         public MainViewModel()
         {
             Categories = new ObservableCollection<Category>();
@@ -55,26 +58,9 @@ namespace Tasker.MVVM.ViewModels
 
         private void FillData()
         {
-            Categories.Add(new Category
-            {
-                Id = 1,
-                CategoryName = ".NET MAUI Course",
-                Color = "#CF14DF"
-            });
-
-            Categories.Add(new Category
-            {
-                Id = 2,
-                CategoryName = "Tutorials",
-                Color = "#df6f14"
-            });
-
-            Categories.Add(new Category
-            {
-                Id = 3,
-                CategoryName = "Shopping",
-                Color = "#14df80"
-            });
+            Categories.Add(new Category { Id = 1, CategoryName = ".NET MAUI Course", Color = "#CF14DF" });
+            Categories.Add(new Category { Id = 2, CategoryName = "Tutorials", Color = "#df6f14" });
+            Categories.Add(new Category { Id = 3, CategoryName = "Shopping", Color = "#14df80" });
 
             Tasks.Add(new MyTask { TaskName = "Upload exercise files", Completed = false, CategoryId = 1 });
             Tasks.Add(new MyTask { TaskName = "Plan next course", Completed = false, CategoryId = 1 });
@@ -85,6 +71,58 @@ namespace Tasker.MVVM.ViewModels
             Tasks.Add(new MyTask { TaskName = "Go for the pepperoni pizza", Completed = false, CategoryId = 3 });
 
             UpdateData();
+        }
+
+        public void SelectCategory(Category category)
+        {
+            if (SelectedCategory == category)
+            {
+                SelectedCategory = null;
+                foreach (var c in Categories)
+                    c.IsSelected = false;
+            }
+            else
+            {
+                SelectedCategory = category;
+                foreach (var c in Categories)
+                    c.IsSelected = (c == category);
+            }
+
+            ApplyFilter();
+        }
+
+        public void SetFilter(string filter)
+        {
+            CurrentFilter = filter;
+            ApplyFilter();
+        }
+
+        public void ApplyFilter()
+        {
+            foreach (var c in Categories)
+            {
+                // Hide category if another one is selected
+                if (SelectedCategory != null && SelectedCategory != c)
+                {
+                    c.IsVisible = false;
+                    continue;
+                }
+
+                c.IsVisible = true;
+
+                // Rebuild CategoryTasks based on filter
+                var filtered = new ObservableCollection<MyTask>();
+                foreach (var t in Tasks)
+                {
+                    if (t.CategoryId != c.Id) continue;
+                    if (CurrentFilter == "Pending" && t.Completed) continue;
+                    if (CurrentFilter == "Done" && !t.Completed) continue;
+                    filtered.Add(t);
+                }
+
+                c.CategoryTasks = filtered;
+                c.OnPropertyChanged(nameof(Category.CategoryTasks));
+            }
         }
 
         public void UpdateData()
@@ -124,14 +162,9 @@ namespace Tasker.MVVM.ViewModels
 
                 foreach (var t in Tasks)
                 {
-                    var category = null as Category;
                     foreach (var c in Categories)
                     {
-                        if (c.Id == t.CategoryId) { category = c; break; }
-                    }
-                    if (category != null)
-                    {
-                        t.TaskColor = category.Color;
+                        if (c.Id == t.CategoryId) { t.TaskColor = c.Color; break; }
                     }
                 }
             }
@@ -139,6 +172,8 @@ namespace Tasker.MVVM.ViewModels
             {
                 _isUpdating = false;
             }
+
+            ApplyFilter();
         }
     }
 }
