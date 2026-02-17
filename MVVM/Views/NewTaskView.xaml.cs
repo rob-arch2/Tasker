@@ -33,7 +33,6 @@ public partial class NewTaskView : ContentPage
 
     private async void OnCreateTaskClicked(object sender, EventArgs e)
     {
-        // Validate input
         if (string.IsNullOrWhiteSpace(viewModel?.Task))
         {
             await DisplayAlert("Error", "Please enter a task name", "OK");
@@ -46,26 +45,13 @@ public partial class NewTaskView : ContentPage
             return;
         }
 
-        // Create the task
         viewModel.CreateTask();
-
-        // Show success message with deadline info
-        string message = "Task created successfully!";
-        if (viewModel.HasDeadline)
-        {
-            var deadline = viewModel.DeadlineDate.Date + viewModel.DeadlineTime;
-            message += $"\nDeadline: {deadline:MMM dd, yyyy h:mm tt}";
-        }
-
-        await DisplayAlert("Success", message, "OK");
-
-        // Navigate back
+        await DisplayAlert("Success", "Task created successfully!", "OK");
         await Navigation.PopAsync();
     }
 
     private async void OnCancelClicked(object sender, EventArgs e)
     {
-        // Ask for confirmation if there's any data entered
         bool hasData = !string.IsNullOrWhiteSpace(viewModel?.Task) ||
                        viewModel?.Subtasks?.Count > 0;
 
