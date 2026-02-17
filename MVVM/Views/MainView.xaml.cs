@@ -5,7 +5,7 @@ namespace Tasker.MVVM.Views;
 
 public partial class MainView : ContentPage
 {
-    private MainViewModel mainViewModel = new MainViewModel();
+    private readonly MainViewModel mainViewModel = new MainViewModel();
 
     public MainView()
     {
@@ -33,11 +33,11 @@ public partial class MainView : ContentPage
         if (button?.CommandParameter is Category category)
         {
             string taskName = await DisplayPromptAsync(
-                 "New Task",
-                 $"Enter task name for {category.CategoryName}",
-                 placeholder: "Task name",
-                 maxLength: 100,
-                 keyboard: Keyboard.Text);
+                "New Task",
+                $"Enter task name for {category.CategoryName}",
+                placeholder: "Task name",
+                maxLength: 100,
+                keyboard: Keyboard.Text);
 
             if (!string.IsNullOrWhiteSpace(taskName))
             {
@@ -55,41 +55,39 @@ public partial class MainView : ContentPage
     private async void AddCategoryClicked(object sender, EventArgs e)
     {
         string categoryName = await DisplayPromptAsync(
-             "New Category",
-             "Enter category name",
-             placeholder: "Category name",
-             maxLength: 30,
-             keyboard: Keyboard.Text);
+            "New Category",
+            "Enter category name",
+            placeholder: "Category name",
+            maxLength: 30,
+            keyboard: Keyboard.Text);
 
         if (!string.IsNullOrWhiteSpace(categoryName))
         {
-            // Ask for deadline
             var deadlineDate = await DisplayPromptAsync(
-                 "Deadline",
-                 "Enter deadline (e.g., 'Today 5:30PM' or 'Tomorrow 9:00AM')",
-                 placeholder: "Today 5:30PM",
-                 keyboard: Keyboard.Text);
+                "Deadline",
+                "Enter deadline (e.g., 'Today 5:30PM' or 'Tomorrow 9:00AM')",
+                placeholder: "Today 5:30PM",
+                keyboard: Keyboard.Text);
 
-            DateTime deadline = DateTime.Today.AddHours(23).AddMinutes(59); // Default to end of today
+            DateTime deadline = DateTime.Today.AddHours(23).AddMinutes(59);
 
-            if (!string.IsNullOrWhiteSpace(deadlineDate))
+            if (!string.IsNullOrWhiteSpace(deadlineDate) &&
+                deadlineDate.Contains("tomorrow", StringComparison.OrdinalIgnoreCase))
             {
-                // Simple parsing (you can enhance this)
-                if (deadlineDate.ToLower().Contains("tomorrow"))
-                {
-                    deadline = DateTime.Today.AddDays(1).AddHours(12);
-                }
+                deadline = DateTime.Today.AddDays(1).AddHours(12);
             }
 
             var random = new Random();
             var newCategory = new Category
             {
-                Id = mainViewModel.Categories.Max(c => c.Id) + 1,
+                Id = mainViewModel.Categories.Count > 0
+                    ? mainViewModel.Categories.Max(c => c.Id) + 1
+                    : 1,
                 CategoryName = categoryName,
                 Color = Color.FromRgb(
-                      random.Next(0, 255),
-                      random.Next(0, 255),
-                      random.Next(0, 255)).ToHex(),
+                    random.Next(0, 255),
+                    random.Next(0, 255),
+                    random.Next(0, 255)).ToHex(),
                 Deadline = deadline,
                 IsExpanded = false
             };

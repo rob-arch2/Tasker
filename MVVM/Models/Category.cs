@@ -1,12 +1,8 @@
-﻿using PropertyChanged;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Tasker.MVVM.Models
 {
@@ -71,32 +67,21 @@ namespace Tasker.MVVM.Models
             set { _isSelected = value; OnPropertyChanged(); }
         }
 
-        // NEW: IsExpanded for collapsible categories
         public bool IsExpanded
         {
             get => _isExpanded;
             set { _isExpanded = value; OnPropertyChanged(); }
         }
 
-        // NEW: Deadline for categories
         public DateTime Deadline
         {
             get => _deadline;
             set { _deadline = value; OnPropertyChanged(); }
         }
 
-        // NEW: Helper properties for bindings
+        public ObservableCollection<MyTask> CategoryTasks { get; set; } = new ObservableCollection<MyTask>();
+
         public int TotalTasks => CategoryTasks?.Count ?? 0;
-
-        // NEW: List of tasks in this category
-        public ObservableCollection<MyTask> CategoryTasks { get; set; }
-
-        public Category()
-        {
-            CategoryTasks = new ObservableCollection<MyTask>();
-            _isExpanded = false;
-            _deadline = DateTime.Today.AddHours(23).AddMinutes(59);
-        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
