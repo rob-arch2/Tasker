@@ -62,43 +62,42 @@ public partial class MainView : ContentPage
             maxLength: 30,
             keyboard: Keyboard.Text);
 
-        if (!string.IsNullOrWhiteSpace(categoryName))
+        if (string.IsNullOrWhiteSpace(categoryName)) return;
+
+        // Ask for deadline when creating category
+        string deadlineInput = await DisplayPromptAsync(
+            "Deadline",
+            "Enter deadline date (e.g. 12/31/2025)",
+            placeholder: "MM/dd/yyyy",
+            keyboard: Keyboard.Text);
+
+        DateTime deadline = DateTime.Today.AddHours(23).AddMinutes(59);
+
+        if (!string.IsNullOrWhiteSpace(deadlineInput))
         {
-            var deadlineInput = await DisplayPromptAsync(
-                "Deadline",
-                "Enter deadline date (e.g. 12/31/2025)",
-                placeholder: "MM/dd/yyyy",
-                keyboard: Keyboard.Text);
-
-            DateTime deadline = DateTime.Today.AddHours(23).AddMinutes(59);
-
-            if (!string.IsNullOrWhiteSpace(deadlineInput))
-            {
-                if (DateTime.TryParse(deadlineInput, out DateTime parsed))
-                    deadline = parsed;
-            }
-
-            var random = new Random();
-            var newCategory = new Category
-            {
-                Id = mainViewModel.Categories.Count > 0
-                    ? mainViewModel.Categories.Max(c => c.Id) + 1
-                    : 1,
-                CategoryName = categoryName,
-                Color = Color.FromRgb(
-                    random.Next(0, 255),
-                    random.Next(0, 255),
-                    random.Next(0, 255)).ToHex(),
-                Deadline = deadline,
-                IsExpanded = false
-            };
-
-            mainViewModel.Categories.Add(newCategory);
-            mainViewModel.UpdateData();
+            if (DateTime.TryParse(deadlineInput, out DateTime parsed))
+                deadline = parsed;
         }
+
+        var random = new Random();
+        var newCategory = new Category
+        {
+            Id = mainViewModel.Categories.Count > 0
+                ? mainViewModel.Categories.Max(c => c.Id) + 1
+                : 1,
+            CategoryName = categoryName,
+            Color = Color.FromRgb(
+                random.Next(0, 255),
+                random.Next(0, 255),
+                random.Next(0, 255)).ToHex(),
+            Deadline = deadline,
+            IsExpanded = false
+        };
+
+        mainViewModel.Categories.Add(newCategory);
+        mainViewModel.UpdateData();
     }
 
-    // Issue 1 fix: deadline accepts any parseable date string
     private async void AddTaskClicked(object sender, EventArgs e)
     {
         if (!mainViewModel.Categories.Any())
@@ -124,38 +123,16 @@ public partial class MainView : ContentPage
         var target = mainViewModel.Categories.FirstOrDefault(c => c.CategoryName == chosen);
         if (target == null) return;
 
-        bool setDeadline = await DisplayAlert("Deadline", "Do you want to set a deadline?", "Yes", "No");
-
-        DateTime? deadline = null;
-
-        if (setDeadline)
-        {
-            string deadlineInput = await DisplayPromptAsync(
-                "Set Deadline",
-                "Enter deadline date (e.g. 12/31/2025 5:00 PM)",
-                placeholder: "MM/dd/yyyy h:mm tt",
-                keyboard: Keyboard.Text);
-
-            if (!string.IsNullOrWhiteSpace(deadlineInput))
-            {
-                if (DateTime.TryParse(deadlineInput, out DateTime parsed))
-                    deadline = parsed;
-                else
-                    await DisplayAlert("Invalid Date", "Could not read that date. No deadline set.", "OK");
-            }
-        }
-
+        // No deadline prompt for tasks
         mainViewModel.Tasks.Add(new MyTask
         {
             TaskName = taskName,
             Completed = false,
             CategoryId = target.Id,
-            TaskColor = target.Color,
-            Deadline = deadline
+            TaskColor = target.Color
         });
     }
 
-    // Issue 1 fix: edit task now correctly updates the task name
     private async void OnEditTaskTapped(object sender, EventArgs e)
     {
         if (sender is not Label label) return;
@@ -173,9 +150,7 @@ public partial class MainView : ContentPage
         if (newName == task.TaskName) return;
 
         task.TaskName = newName;
-
-        // Force the UI to refresh the task list
-        mainViewModel.ApplyFilter();
+        mainViewModel.UpdateData();
     }
 
     private async void OnEditCategoryTapped(object sender, EventArgs e)
@@ -195,7 +170,6 @@ public partial class MainView : ContentPage
             category.CategoryName = newName;
     }
 
-    // Issue 3 fix: filter walks parent HorizontalStackLayout siblings, no x:Name needed
     private void OnFilterClicked(object sender, EventArgs e)
     {
         if (sender is not Button tapped) return;

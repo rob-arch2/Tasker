@@ -58,10 +58,32 @@ namespace Tasker.MVVM.ViewModels
 
         private void FillData()
         {
-            Categories.Add(new Category { Id = 1, CategoryName = ".NET MAUI Course", Color = "#CF14DF" });
-            Categories.Add(new Category { Id = 2, CategoryName = "Tutorials", Color = "#df6f14" });
-            Categories.Add(new Category { Id = 3, CategoryName = "Shopping", Color = "#14df80" });
+            // Add categories with deadlines
+            Categories.Add(new Category
+            {
+                Id = 1,
+                CategoryName = ".NET MAUI Course",
+                Color = "#CF14DF",
+                Deadline = DateTime.Today.AddDays(7)
+            });
 
+            Categories.Add(new Category
+            {
+                Id = 2,
+                CategoryName = "Tutorials",
+                Color = "#df6f14",
+                Deadline = DateTime.Today.AddDays(3)
+            });
+
+            Categories.Add(new Category
+            {
+                Id = 3,
+                CategoryName = "Shopping",
+                Color = "#14df80",
+                Deadline = DateTime.Today.AddDays(1)
+            });
+
+            // Add tasks - TaskColor will be set by UpdateData()
             Tasks.Add(new MyTask { TaskName = "Upload exercise files", Completed = false, CategoryId = 1 });
             Tasks.Add(new MyTask { TaskName = "Plan next course", Completed = false, CategoryId = 1 });
             Tasks.Add(new MyTask { TaskName = "Upload new ASP.NET video on YouTube", Completed = false, CategoryId = 2 });
@@ -101,27 +123,54 @@ namespace Tasker.MVVM.ViewModels
         {
             foreach (var c in Categories)
             {
-                // Hide category if another one is selected
+                // If a specific category is selected, hide all others
                 if (SelectedCategory != null && SelectedCategory != c)
                 {
                     c.IsVisible = false;
                     continue;
                 }
 
-                c.IsVisible = true;
-
-                // Rebuild CategoryTasks based on filter
-                var filtered = new ObservableCollection<MyTask>();
-                foreach (var t in Tasks)
+                // Check the filter - show/hide the CATEGORY based on whether it HAS pending or done tasks
+                if (CurrentFilter == "Pending")
                 {
-                    if (t.CategoryId != c.Id) continue;
-                    if (CurrentFilter == "Pending" && t.Completed) continue;
-                    if (CurrentFilter == "Done" && !t.Completed) continue;
-                    filtered.Add(t);
+                    // Show category only if it has at least one pending task
+                    bool hasPending = false;
+                    foreach (var t in Tasks)
+                    {
+                        if (t.CategoryId == c.Id && !t.Completed)
+                        {
+                            hasPending = true;
+                            break;
+                        }
+                    }
+                    c.IsVisible = hasPending;
                 }
+                else if (CurrentFilter == "Done")
+                {
+                    // Show category only if ALL tasks are done AND there's at least one task
+                    bool hasAnyTask = false;
+                    bool allDone = true;
 
-                c.CategoryTasks = filtered;
-                c.OnPropertyChanged(nameof(Category.CategoryTasks));
+                    foreach (var t in Tasks)
+                    {
+                        if (t.CategoryId == c.Id)
+                        {
+                            hasAnyTask = true;
+                            if (!t.Completed)
+                            {
+                                allDone = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    c.IsVisible = hasAnyTask && allDone;
+                }
+                else
+                {
+                    // "All" - show category
+                    c.IsVisible = true;
+                }
             }
         }
 
@@ -164,7 +213,11 @@ namespace Tasker.MVVM.ViewModels
                 {
                     foreach (var c in Categories)
                     {
-                        if (c.Id == t.CategoryId) { t.TaskColor = c.Color; break; }
+                        if (c.Id == t.CategoryId)
+                        {
+                            t.TaskColor = c.Color;
+                            break;
+                        }
                     }
                 }
             }
